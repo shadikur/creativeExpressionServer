@@ -34,7 +34,16 @@ app.get('/', (req, res) => {
     res.send({ 'status': 'API Server is running' });
 });
 
+app.get('/jwt-test', verifyJWT, (req, res) => {
+    res.send({ 'status': 'API Server is running' });
+});
 
+// JWT Token
+app.post('/jwt', (req, res) => {
+    const { email } = req.body;
+    const accessToken = jwt.sign({ id: email }, process.env.JWT_SECRET, { expiresIn: 300 });
+    res.json({ auth: true, accessToken: accessToken });
+});
 
 
 // Listen
