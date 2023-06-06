@@ -12,6 +12,9 @@ app.use(express.json());
 
 
 // Routes
+app.get('/', (req, res) => {
+    res.send({ 'status': 'API Server is running' });
+});
 
 
 
