@@ -1,14 +1,20 @@
 require("dotenv").config();
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const multer = require('multer');
+const path = require('path');
 const jwt = require('jsonwebtoken');
 const app = express();
+const fs = require('fs');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/public/uploads', express.static(path.join(__dirname, '/public/uploads')));
+
 
 // Verify JWT Token
 const verifyJWT = (req, res, next) => {
@@ -27,6 +33,52 @@ const verifyJWT = (req, res, next) => {
         });
     }
 };
+
+// Multer configuration
+const storage = multer.diskStorage({
+    destination: function (req, file, callback) {
+        callback(null, 'public/uploads');
+    },
+    filename: function (req, file, callback) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileExtension = file.originalname.split('.').pop();
+        callback(null, file.fieldname + '-' + uniqueSuffix + '.' + fileExtension);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/multer', upload.single('file'), (req, res) => {
+    if (!req.file) {
+        console.log("No file received");
+        return res.send({
+            success: false
+        });
+    } else {
+        console.log('File received:', req.file);
+
+        // Move the file to the public/uploads folder
+        const filePath = `public/uploads/${req.file.filename}`;
+        fs.rename(req.file.path, filePath, (error) => {
+            if (error) {
+                console.log('Error moving file:', error);
+                return res.send({
+                    success: false
+                });
+            }
+
+            console.log('File moved successfully');
+
+            // Generate the public URL for the file
+            const imageUrl = `${req.protocol}://${req.get('host')}/${filePath}`;
+
+            return res.send({
+                success: true,
+                imageUrl: imageUrl
+            });
+        });
+    }
+});
 
 
 // MongoDB Connection
@@ -64,11 +116,33 @@ async function run() {
             res.json(result);
         });
 
+        // get all users from users collection
         app.get('/users', async (req, res) => {
             const cursor = users.find({});
             const result = await cursor.toArray();
             res.json(result);
         });
+
+        // stripe payment
+        app.post('/create-checkout-session', async (req, res) => {
+            const session = await stripe.checkout.sessions.create({
+                line_items: [
+                    {
+                        // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
+                        price: '{{PRICE_ID}}',
+                        quantity: 1,
+                    },
+                ],
+                mode: 'payment',
+                success_url: `${YOUR_DOMAIN}?success=true`,
+                cancel_url: `${YOUR_DOMAIN}?canceled=true`,
+            });
+
+            res.redirect(303, session.url);
+        });
+
+
+
 
 
 
