@@ -116,7 +116,7 @@ app.get('/jwt-test', verifyJWT, (req, res) => {
 });
 
 // JWT Token
-app.post('/jwt', (req, res) => {
+app.post('/auth', (req, res) => {
     const { email } = req.body;
     const accessToken = jwt.sign({ id: email }, process.env.JWT_SECRET, { expiresIn: 300 });
     res.json({ auth: true, accessToken: accessToken });
