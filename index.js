@@ -4,7 +4,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const app = express();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 // Middleware
@@ -73,6 +73,29 @@ async function run() {
             res.json(result);
         });
 
+        // update user role by id
+        // Update user's role in users collection
+        app.put('/updaterole/:id', async (req, res) => {
+            const userId = req.params.id;
+            const { role } = req.body;
+
+            try {
+                const result = await users.updateOne(
+                    { _id: new ObjectId(userId) },
+                    { $set: { role } }
+                );
+
+                if (result.matchedCount === 0) {
+                    return res.status(404).json({ message: 'User not found' });
+                }
+                res.json({ message: 'User role updated successfully' });
+            } catch (error) {
+                console.error('Error updating user role:', error);
+                res.status(500).json({ message: 'Internal server error' });
+            }
+        });
+
+
         // stripe payment
         app.post('/create-checkout-session', async (req, res) => {
             const session = await stripe.checkout.sessions.create({
@@ -90,11 +113,6 @@ async function run() {
 
             res.redirect(303, session.url);
         });
-
-
-
-
-
 
     } finally {
         // Ensures that the client will close when you finish/error
