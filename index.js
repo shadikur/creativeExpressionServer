@@ -53,7 +53,7 @@ const payments = appDB.collection("payments");
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        client.connect();
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -71,6 +71,22 @@ async function run() {
             const cursor = users.find({});
             const result = await cursor.toArray();
             res.json(result);
+        });
+
+        // Delete user by id
+        app.delete('/deleteuser/:id', async (req, res) => {
+            const userId = req.params.id;
+            console.log((userId));
+            try {
+                const result = await users.deleteOne({ _id: new ObjectId(userId) });
+                if (result.deletedCount === 0) {
+                    return res.status(404).json({ message: 'User not found' });
+                }
+                res.json({ message: 'User deleted successfully' });
+                console.log('Deleted user with id:', userId);
+            } catch (error) {
+                console.error('Error deleting user:', error);
+            }
         });
 
         // update user role by id
