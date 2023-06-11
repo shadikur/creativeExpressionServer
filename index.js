@@ -47,6 +47,7 @@ const client = new MongoClient(uri, {
 const appDB = client.db(process.env.DB_NAME);
 const users = appDB.collection("users");
 const events = appDB.collection("events");
+const categories = appDB.collection("categories");
 const classes = appDB.collection("classes");
 const payments = appDB.collection("payments");
 
@@ -110,6 +111,60 @@ async function run() {
                 res.status(500).json({ message: 'Internal server error' });
             }
         });
+
+        // Add category to categories collection
+        app.post('/categories', async (req, res) => {
+            const newCategory = req.body;
+            const result = await categories.insertOne(newCategory);
+            console.log(result);
+            res.json(result);
+        });
+
+        // get all categories from categories collection
+        app.get('/categories', async (req, res) => {
+            const cursor = categories.find({});
+            const result = await cursor.toArray();
+            res.json(result);
+        });
+
+        // delete category by id
+        app.delete('/categories/:id', async (req, res) => {
+            const categoryId = req.params.id;
+            console.log((categoryId));
+            try {
+                const result = await categories.deleteOne({ _id: new ObjectId(categoryId) });
+                if (result.deletedCount === 0) {
+                    return res.status(404).json({ message: 'Category not found' });
+                }
+                res.json({ message: 'Category deleted successfully' });
+                console.log('Deleted category with id:', categoryId);
+            } catch (error) {
+                console.error('Error deleting category:', error);
+            }
+        });
+
+        // update category name, description, image by id
+        app.put('/categories/:id', async (req, res) => {
+            const categoryId = req.params.id;
+            const { name, description, image } = req.body;
+
+            try {
+                const result = await categories.updateOne(
+                    { _id: new ObjectId(categoryId) },
+                    { $set: { name, description, image } }
+                );
+
+                if (result.matchedCount === 0) {
+                    return res.status(404).json({ message: 'Category not found' });
+                }
+                res.json({ message: 'Category updated successfully' });
+            }
+            catch (error) {
+                console.error('Error updating category:', error);
+                res.status(500).json({ message: 'Internal server error' });
+            }
+        });
+
 
 
         // stripe payment
