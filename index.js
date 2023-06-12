@@ -54,8 +54,8 @@ const payments = appDB.collection("payments");
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        client.connect();
-        // Send a ping to confirm a successful connection
+        // await client.connect();
+        // Send a ping to confirm a ssccessful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
@@ -165,6 +165,37 @@ async function run() {
             }
         });
 
+        // Add class to classes collection
+        app.post('/classes', async (req, res) => {
+            const newClass = req.body;
+            console.log(newClass);
+            const result = await classes.insertOne(newClass);
+            console.log(result);
+            res.json(result);
+        });
+
+        // get all classes from classes collection
+        app.get('/classes', async (req, res) => {
+            const cursor = classes.find({});
+            const result = await cursor.toArray();
+            res.json(result);
+        });
+
+        // delete class by id
+        app.delete('/classes/:id', async (req, res) => {
+            const classId = req.params.id;
+            console.log((classId));
+            try {
+                const result = await classes.deleteOne({ _id: new ObjectId(classId) });
+                if (result.deletedCount === 0) {
+                    return res.status(404).json({ message: 'Class not found' });
+                }
+                res.json({ message: 'Class deleted successfully' });
+                console.log('Deleted class with id:', classId);
+            } catch (error) {
+                console.error('Error deleting class:', error);
+            }
+        });
 
 
         // stripe payment
