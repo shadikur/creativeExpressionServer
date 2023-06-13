@@ -112,6 +112,15 @@ async function run() {
             }
         });
 
+        // Get user by email
+        app.get('/users/:email', async (req, res) => {
+            const userEmail = req.params.email;
+            console.log(userEmail);
+            const cursor = users.find({ email: userEmail });
+            const result = await cursor.toArray();
+            res.json(result);
+        });
+
         // Add category to categories collection
         app.post('/categories', async (req, res) => {
             const newCategory = req.body;
@@ -164,6 +173,28 @@ async function run() {
                 res.status(500).json({ message: 'Internal server error' });
             }
         });
+
+        // Update deny / approve status in classes collection
+        app.put('/classstatus/:id', async (req, res) => {
+            const classId = req.params.id;
+            const { status } = req.body;
+
+            try {
+                const result = await classes.updateOne(
+                    { _id: new ObjectId(classId) },
+                    { $set: { status } }
+                );
+
+                if (result.matchedCount === 0) {
+                    return res.status(404).json({ message: 'Class not found' });
+                }
+                res.json({ message: 'Class status updated successfully' });
+            } catch (error) {
+                console.error('Error updating class status:', error);
+                res.status(500).json({ message: 'Internal server error' });
+            }
+        });
+
 
         // Add class to classes collection
         app.post('/classes', async (req, res) => {
