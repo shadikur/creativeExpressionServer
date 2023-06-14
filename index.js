@@ -228,6 +228,29 @@ async function run() {
             }
         });
 
+        // Popular 6 classes based on number of enrollments
+        app.get('/popularclasses', async (req, res) => {
+            const cursor = classes.find({}).sort({ enrollments: -1 }).limit(6);
+            const result = await cursor.toArray();
+            res.json(result);
+        });
+
+        // Popular top 6 instructors based on number of enrollments of their classes
+        app.get('/popularinstructors', async (req, res) => {
+            const cursor = users.find({ role: "Instructor" }).sort({ enrollments: -1 }).limit(6);
+            const result = await cursor.toArray();
+            res.json(result);
+        });
+
+        // Add event to events collection
+        app.post('/events', async (req, res) => {
+            const newEvent = req.body;
+            console.log(newEvent);
+            const result = await events.insertOne(newEvent);
+            console.log(result);
+            res.json(result);
+        });
+
 
         // stripe payment
         app.post('/create-checkout-session', async (req, res) => {
