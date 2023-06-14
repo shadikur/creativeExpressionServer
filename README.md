@@ -23,7 +23,7 @@ npm start
 This will start the server on `http://localhost:5000`. You can now make requests to the API endpoints.
 
 ## Live Demo
-API is live at [https://creative-expressions-api.vercel.app/](https://creative-expressions-api.vercel.app/)
+API is live at [https://creativeapi.herokuapp.com/](https://creativeapi.herokuapp.com/)
 
 ## API Endpoints
 
