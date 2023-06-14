@@ -212,6 +212,13 @@ async function run() {
             res.json(result);
         });
 
+        // get only approved classes from classes collection
+        app.get('/approvedclasses', async (req, res) => {
+            const cursor = classes.find({ status: "approved" });
+            const result = await cursor.toArray();
+            res.json(result);
+        });
+
         // delete class by id
         app.delete('/classes/:id', async (req, res) => {
             const classId = req.params.id;
@@ -248,6 +255,13 @@ async function run() {
             console.log(newEvent);
             const result = await events.insertOne(newEvent);
             console.log(result);
+            res.json(result);
+        });
+
+        // get all events from events collection
+        app.get('/events', async (req, res) => {
+            const cursor = events.find({});
+            const result = await cursor.toArray();
             res.json(result);
         });
 
