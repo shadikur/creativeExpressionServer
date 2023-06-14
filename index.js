@@ -30,6 +30,61 @@ const verifyJWT = (req, res, next) => {
     }
 };
 
+// Verify Admin
+const verifyAdmin = (req, res, next) => {
+    const token = req.headers["authorization"];
+    const accessToken = token && token.split(" ")[1];
+    if (!accessToken) {
+        res.status(401).send({ auth: false, message: "Unauthorized Access" });
+    } else {
+        jwt.verify(accessToken, process.env.JWT_SECRET, (err, decoded) => {
+            if (err) {
+                res.status(403).json({ auth: false, message: "Access Forbidden!" });
+            } else {
+                req.userId = decoded.id;
+                const userEmail = req.userId;
+                console.log(userEmail);
+                const cursor = users.find({ email: userEmail });
+                const result = cursor.toArray();
+                res.json(result);
+                if (result.role === "Admin") {
+                    next();
+                } else {
+                    res.status(403).json({ auth: false, message: "Access Forbidden!" });
+                }
+            }
+        });
+    }
+};
+
+// Verify Instructor
+const verifyInstructor = (req, res, next) => {
+    const token = req.headers["authorization"];
+    const accessToken = token && token.split(" ")[1];
+    if (!accessToken) {
+        res.status(401).send({ auth: false, message: "Unauthorized Access" });
+    } else {
+        jwt.verify(accessToken, process.env.JWT_SECRET, (err, decoded) => {
+            if (err) {
+                res.status(403).json({ auth: false, message: "Access Forbidden!" });
+            } else {
+                req.userId = decoded.id;
+                const userEmail = req.userId;
+                console.log(userEmail);
+                const cursor = users.find({ email: userEmail });
+                const result = cursor.toArray();
+                res.json(result);
+                if (result.role === "Instructor") {
+                    next();
+                } else {
+                    res.status(403).json({ auth: false, message: "Access Forbidden!" });
+                }
+            }
+        });
+    }
+};
+
+
 
 // MongoDB Connection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@creativeexpressions.w7kftro.mongodb.net/?retryWrites=true&w=majority`;
@@ -322,7 +377,7 @@ app.get('/jwt-test', verifyJWT, (req, res) => {
 // JWT Token
 app.post('/auth', (req, res) => {
     const { email } = req.body;
-    const accessToken = jwt.sign({ id: email }, process.env.JWT_SECRET, { expiresIn: 300 });
+    const accessToken = jwt.sign({ id: email }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ auth: true, accessToken: accessToken });
 });
 
