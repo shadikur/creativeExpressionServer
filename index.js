@@ -121,6 +121,22 @@ async function run() {
             res.json(result);
         });
 
+        // Get all instructors from users collection
+        app.get('/instructors', async (req, res) => {
+            const cursor = users.find({ role: "Instructor" });
+            const result = await cursor.toArray();
+            res.json(result);
+        });
+
+        // Number of students enrolled under each instructor
+        app.get('/instructors/:id', async (req, res) => {
+            const instructorId = req.params.id;
+            console.log(instructorId);
+            const cursor = users.find({ role: "Student", instructorId: instructorId });
+            const result = await cursor.toArray();
+            res.json(result);
+        });
+
         // Add category to categories collection
         app.post('/categories', async (req, res) => {
             const newCategory = req.body;
